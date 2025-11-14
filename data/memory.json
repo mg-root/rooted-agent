@@ -1,0 +1,33 @@
+{
+  "identity": {
+    "name": null,
+    "preferred_language": "fr"
+  },
+  "preferences": {
+    "tone": "casual",
+    "format": "markdown",
+    "detail_level": "medium"
+  },
+  "skills": {
+    "programming_level": "advanced",
+    "favorite_stack": ["Vue.js", "Node.js", "Unity"]
+  },
+  "projects": [
+    {
+      "id": "casino_site",
+      "name": "Site de casino fictif",
+      "tech": ["Vue.js", "Node.js", "Docker"],
+      "status": "in_progress",
+      "last_update": "2025-08-01"
+    }
+  ],
+  "notes": [
+    {
+      "id": "note_1",
+      "topic": "game_design",
+      "content": "User likes economic systems and money management in games.",
+      "importance": "high",
+      "last_update": "2025-08-23"
+    }
+  ]
+}

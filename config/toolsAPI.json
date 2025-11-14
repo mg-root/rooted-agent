@@ -1,0 +1,30 @@
+{
+  "tools": {
+    "fake_web_search": {
+      "description": "Fake-searches the web and returns a placeholder result. Mainly used for testing tool integration.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The text to (fake) search for."
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    "diagram_mermaid": {
+      "description": "Generates a Mermaid diagram based on the provided Mermaid syntax. The tool returns the diagram in a renderable format.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mermaid_text": {
+            "type": "string",
+            "description": "A valid Mermaid diagram definition (e.g., flowchart, sequence diagram, class diagram)."
+          }
+        },
+        "required": ["mermaid_text"]
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+# Virtual Environment
+.venv
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-projet
+*.sublime-workspace
+
+# Python packaging tools
+dist/
+build/
+*.egg-info/
+
+# Jupyter
+.iynb
+.output
+
+# Other
+*.zip
+*.tar.gz
+*.dump
+*.sqlite3
+
+# Test files
+.coverage
+.htmlcov/
