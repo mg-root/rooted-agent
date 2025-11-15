@@ -2,13 +2,13 @@ import requests
 import json
 from core.system import PATHS, load_json
 
-def _ollama_generate_stream(messages):
+def _ollama_generate_without_tools(messages):
     config = load_json(PATHS["DEFAULT"])
 
     url = "http://localhost:11434/api/chat"
     payload = {
         "model": config["model"],
-        "prompt": messages,
+        "messages": messages,
         "options": {"temperature": config["temperature"]},
         "stream": True
     }
@@ -22,23 +22,33 @@ def _ollama_generate_stream(messages):
         data = json.loads(line.decode("utf-8"))
         yield data.get("message", {}).get("content", "")
 
-def _ollama_generate_nostream(messages):
+def _ollama_generate_include_tools(messages):
+    config = load_json(PATHS["DEFAULT"])
+    tools_api = load_json(PATHS["TOOLS_API"])
+
     url = "http://localhost:11434/api/chat"
     payload = {
-        "model": "llama3.1",
+        "model": config["model"],
         "messages": messages,
-        "options": {"temperature": 0.2},
+        "options": {"temperature": config["temperature"]},
+        "tools": tools_api,
         "stream": False
     }
 
-    response = requests.post(url, json=payload)
+    response = requests.post(url, json=payload, stream=False)
     response.raise_for_status()
 
     data = response.json()
-    return data.get("message", {}).get("content", "")
 
-def ollama_generate(messages, stream=True):
-    if stream:
-        return _ollama_generate_stream(messages)
+    msg = data.get("message", {})
+
+    if "tool_calls" in msg:
+        return msg
     else:
-        return _ollama_generate_nostream(messages)
+        return msg.get("content", "")
+
+def ollama_generate(messages, include_tools):
+    if include_tools:
+        return _ollama_generate_include_tools(messages)
+    else:
+        return _ollama_generate_without_tools(messages)

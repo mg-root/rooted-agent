@@ -1,6 +1,8 @@
-{
-  "tools": {
-    "fake_web_search": {
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "fake_web_search",
       "description": "Fake-searches the web and returns a placeholder result. Mainly used for testing tool integration.",
       "parameters": {
         "type": "object",
@@ -12,8 +14,12 @@
         },
         "required": ["query"]
       }
-    },
-    "diagram_mermaid": {
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "diagram_mermaid",
       "description": "Generates a Mermaid diagram based on the provided Mermaid syntax. The tool returns the diagram in a renderable format.",
       "parameters": {
         "type": "object",
@@ -27,4 +33,4 @@
       }
     }
   }
-}
+]

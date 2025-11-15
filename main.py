@@ -7,7 +7,7 @@ from rich.markdown import Markdown
 from core.llm import ollama_generate
 from core.system import PATHS, load_json, save_chat
 from core.chatBuilder import build_chat
-from core.toolsManager import detect_tool_call, execute_tool
+from core.toolsManager import execute_tool
 
 import requests
 from rich.console import Console
@@ -31,21 +31,9 @@ def is_model_loaded(model_name: str) -> bool:
 
 def load_model_with_progress(model_name: str):
     console.print(f"[magenta]Chargement du modèle {model_name}...[/magenta]")
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        transient=True,
-        console=console,
-    ) as progress:
-        task = progress.add_task("Chargement en cours...", total=None)
-        try:
-            progress.update(task, description="✅ Modèle chargé et prêt.")
-        except Exception as e:
-            progress.update(task, description=f"[red]❌ Échec du chargement : {e}[/red]")
-            raise
 
 @app.command()
-def chat():
+def chat(include_tools: bool = True):
     """
     Start a new chat with Agent Rooted.
     """
@@ -80,7 +68,7 @@ def chat():
             continue
         elif user_input.lower().startswith('#save '):
             name = user_input.replace("#save ", "").strip()
-            success = save_chat(name, messages)
+            success = save_chat(name, history)
             if success:
                 console.print(f"[[green]Chat saved[/green]] {os.path.join(PATHS["LOGS"], name)}\n")
             else:
@@ -98,56 +86,58 @@ def chat():
             "content": user_input
         })
 
-        messages = build_chat(history)
-        response = ""
+        if include_tools:
+            try:
+                response = ollama_generate(build_chat(history), include_tools)
+                if isinstance(response, dict):                  
+                    for tool in response["tool_calls"]:
+                        tool_name = tool["function"]["name"]
+                        tool_call_id = tool["id"]
+                        tool_output = execute_tool(tool)
 
-        try:
-            response = ""
-            with Live(console=console, refresh_per_second=20) as live:
-                for token in ollama_generate(messages, stream=True):
-                    response += token
-                    live.update(Markdown(response))
+                        history.append({
+                            "role": "tool",
+                            "rool_call_id": tool_call_id,
+                            "content": tool_output
+                        })
 
-            cleaned_response = response.strip().strip("`")
-            print(response)
-            tool_call = detect_tool_call(cleaned_response)
+                        console.print(f"[[green]+[/green]] Tool: {tool_name} has been called.\n")
 
-            if tool_call:
-                tool_name = tool_call["tool"]
+                    final_response = ollama_generate(build_chat(history), include_tools)
 
-                tool_output = execute_tool(tool_call)
-                console.print("[green]Tool called[/green]")
+                    history.append({
+                        "role": "assistant",
+                        "content": final_response
+                    })
 
-                history.append({
-                    "role": "tool",
-                    "content": tool_output,
-                    "name": tool_name
-                })
+                    console.print(Markdown(final_response))
+                else:
+                    history.append({
+                        "role": 'assistant',
+                        "content": response
+                    })
 
-                new_messages = build_chat(history)
-                final_response = ""
+                    tmp = []
 
+                    console.print(Markdown(response))
+            except Exception as e:
+                console.print(f"\n[red]Error 111:[/red] {e}")
+        else:
+            try:
+                response = ""
                 with Live(console=console, refresh_per_second=20) as live:
-                    for token in ollama_generate(new_messages, stream=True):
-                        final_response += token
-                        live.update(Markdown(final_response))
-
+                    for token in ollama_generate(build_chat(history), include_tools):
+                        response += token
+                        live.update(Markdown(response))
+                
                 history.append({
-                    "role": "assistant",
-                    "content": final_response
+                    "role": 'assistant',
+                    "content": response
                 })
 
                 tmp = []
-                continue
-            
-            history.append({
-                "role": 'assistant',
-                "content": response
-            })
-
-            tmp = []
-        except Exception as e:
-            console.print(f"\n[red]Error:[/red] {e}")
+            except Exception as e:
+                console.print(f"\n[red]Error:[/red] {e}")
 
 if __name__ == "__main__":
     app()
