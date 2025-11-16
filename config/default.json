@@ -4,6 +4,7 @@
     "whitelist_workspaces": [
         "/home/mgroot",
         "/home/mgroot/Desktop/Development",
+        "/home/mgroot/Desktop/Development/agent-ia-linux/workspace",
         "/home/mgroot/Desktop/CESI"
     ],
     "promptDisplayed": "~$",

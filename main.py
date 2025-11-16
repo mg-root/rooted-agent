@@ -58,15 +58,13 @@ def chat(include_tools: bool = False):
             break
         elif user_input.lower() == f"{config["prefix"]}load":
             workspace = select_workspace()
-            files = select_files(workspace, True)
-            continue
-            if os.path.exists(path):
-                with open(path, "r", encoding="utf-8") as file:
-                    content = file.read()
-                console.print(f"[[green]File loaded[/green]] {path.split("/")[-1]}\n")
-                tmp.append([path.split("/")[-1], content])
-            else:
-                console.print(f"[[red]File undefined[/red]] {path.split("/")[-1]}\n")
+            files = select_files(workspace, multiple=True)
+            for file in files:
+                with open(file, "r", encoding="utf-8") as f:
+                    content = f.read()
+                file_name = os.path.basename(file)
+                console.print(f"[[green]File loaded[/green]] {file_name}\n")
+                tmp.append([file_name, content])
             continue
         elif user_input.lower() == f"{config["prefix"]}history":
             console.print(history)
@@ -85,6 +83,12 @@ def chat(include_tools: bool = False):
 
         if not is_model_loaded(MODEL_NAME):
             load_model_with_progress(MODEL_NAME)
+
+        for file in tmp:
+            history.append({
+                "role": "system",
+                "content": f"[File loaded: {file[0]}]\n{file[1]}"
+            })
 
         history.append({
             "role": "user",
@@ -112,7 +116,7 @@ def chat(include_tools: bool = False):
                         "content": final_response
                     })
 
-                    console.print(Markdown(final_response))
+                    console.print(Markdown(final_response + "\n"))
                 else:
                     history.append({
                         "role": 'assistant',
@@ -121,7 +125,7 @@ def chat(include_tools: bool = False):
 
                     tmp = []
 
-                    console.print(Markdown(response) + "\n")
+                    console.print(Markdown(response + "\n"))
             except Exception as e:
                 console.print(f"\n[red]Error 111:[/red] {e}")
         else:
@@ -131,7 +135,7 @@ def chat(include_tools: bool = False):
                     for token in ollama_generate(build_chat(history), include_tools):
                         response += token
                         live.update(Markdown(response))
-                    live.update("\n")
+                print()
                 
                 history.append({
                     "role": 'assistant',
