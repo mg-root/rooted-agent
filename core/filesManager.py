@@ -45,11 +45,11 @@ def select_workspace():
 
             live.update(render_menu())
 
-def select_files(workspace: str, path: str = None, multiple: bool = False, authorized_hidden_files: bool = False, authorized_files_extension: list = [".txt"]):
+def select_files(workspace: str, path: str = None, multiple: bool = False, authorized_hidden_files: bool = False, authorized_files_extension: list = [".txt"], current_files: list = []):
     if not path:
         path = workspace
     
-    files_selected = []
+    files_selected = current_files
     
     title = "Select your file(s):"
     dirs, files = listdir(path, authorized_hidden_files, authorized_files_extension)
@@ -113,7 +113,7 @@ def select_files(workspace: str, path: str = None, multiple: bool = False, autho
 
             live.update(render_menu())
 
-def listdir(path: str, authorized_hidden_files: bool = False, authorized_files_extension: list = [".txt"]) -> dict:
+def listdir(path: str, authorized_hidden_files: bool = False, authorized_files_extension: list = [".txt"]):
     if not os.path.exists(path):
         return ValueError("Path doesn't exist.")
 
