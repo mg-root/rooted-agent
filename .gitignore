@@ -50,6 +50,3 @@ build/
 # Test files
 .coverage
 .htmlcov/
-
-# Perso
-workspace/
