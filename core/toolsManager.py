@@ -1,12 +1,14 @@
 from typing import Dict, Callable
 from tools.diagram import render_mermaid
-from tools.fake_web import fake_web_search
 from rich.console import Console
+from tools.edit_file import edit_file
+from tools.make_file import make_file
 
 console = Console()
 
 TOOLS: Dict[str, Callable] = {
-    "fake_web_search": fake_web_search,
+    "edit_file": edit_file,
+    "make_file": make_file,
     "diagram_mermaid": render_mermaid
 }
 

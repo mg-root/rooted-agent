@@ -52,7 +52,7 @@ def is_path_allowed(path: str, whitelist: list[str]) -> bool:
 
 def confirm(message: str) -> bool:
     console.print(f"[bold yellow][CONFIRM][/bold yellow] {message}")
-    ans = Confirm.ask("Procéder ?", default=False)
+    ans = Confirm.ask("Proceed ?", default=False)
     return bool(ans)
 
 def backup_file(path: str) -> Optional[str]:

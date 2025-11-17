@@ -9,6 +9,7 @@ from core.system import PATHS, load_json, save_chat
 from core.chatBuilder import build_chat
 from core.toolsManager import execute_tool
 from core.notifications import informate
+from tools.read_file import read_file
 
 import requests
 from rich.console import Console
@@ -85,7 +86,7 @@ def chat(include_tools: bool = False):
             selectSpecificFiles = Confirm.ask("Do you want to select specific files ?", show_default=True, default=True)
             if selectSpecificFiles:
                 last_current_files = context["files"].copy()
-                result = select_files(workspace, multiple=True, authorized_files_extension=[".txt", ".pdf", ".docx"], current_files=context["files"])
+                result = select_files(workspace, multiple=True, current_files=context["files"])
                 
                 if result == False:
                     continue
@@ -167,13 +168,70 @@ def chat(include_tools: bool = False):
         for file in tmp:
             history.append({
                 "role": "system",
-                "content": f"[File loaded: {file[0]}]\n{file[1]}"
+                "content": f"[File: {file[0]}]\n---START---{file[1]}\n---END---"
             })
 
         history.append({
             "role": "user",
             "content": user_input
         })
+
+        if context["files"]:
+            tmp_messages = []
+            tmp_messages.append({
+                "role": "system",
+                "content": (
+                    "You are an assistant whose ONLY responsibility is to select which files are relevant "
+                    "to the user's last message.\n\n"
+
+                    "Below is the list of files available in the context:\n"
+                    f"{chr(10).join([f' - {file}' for file in context['files']])}\n\n"
+
+                    "YOUR RULES (STRICT):\n"
+                    "1. You MUST NOT answer the user's question.\n"
+                    "2. You MUST NOT provide, suggest, or execute shell commands (no 'touch', 'echo', 'ls', "
+                    "'cat', 'mkdir', 'rm', or any other shell command or script).\n"
+                    "3. You MUST NOT summarize, inspect, or interpret the content of any file.\n"
+                    "4. You MUST NOT explain your reasoning.\n"
+                    "5. You MUST NOT open or analyze files.\n"
+                    "6. You MUST ONLY return the list of file paths that are relevant to the user's request.\n"
+                    "7. You MUST answer with the required format ONLY, and nothing else.\n\n"
+
+                    "EXPECTED OUTPUT FORMAT (MANDATORY):\n"
+                    "[\"/full/path/to/file.ext\", ...]\n\n"
+
+                    "SELECTION RULES:\n"
+                    "- If the user explicitly mentions a file name, return ONLY that file (if it exists in the context).\n"
+                    "- If no file corresponds to the user's request, return an empty list: [].\n"
+                    "- If you are unsure whether a file may be relevant, INCLUDE IT in the list.\n"
+                    "- NEVER return anything other than a pure JSON array of file paths.\n"
+                    "- DO NOT add extra sentences, comments, explanations, or formatting.\n"
+                )
+            })
+
+
+
+            tmp_messages.append({
+                "role": "user",
+                "content": user_input
+            })
+            
+            response = ollama_generate(tmp_messages, force_no_stream=True)
+
+            console.log(response, type(response))
+
+            if isinstance(response, list) and len(response) > 0:
+                for file in response:
+                    if os.path.exists(file):
+                        content = read_file(file)
+                    else:
+                        content = "[EMPTY FILE — DOES NOT EXIST YET]"
+
+                    history.insert(-2, {
+                        "role": "system",
+                        "content": f"[File: {file}]\n---START---\n{content}\n---END---"
+                    })
+
 
         if include_tools:
             try:
@@ -207,7 +265,7 @@ def chat(include_tools: bool = False):
 
                     console.print(Markdown(response + "\n"))
             except Exception as e:
-                console.print(f"\n[red]Error 111:[/red] {e}")
+                console.print(f"\n[red]Error 1111:[/red] {e}")
         else:
             try:
                 response = ""
@@ -224,7 +282,7 @@ def chat(include_tools: bool = False):
 
                 tmp = []
             except Exception as e:
-                console.print(f"\n[red]Error:[/red] {e}")
+                console.print(f"\n[red]Error 111:[/red] {e}")
 
 if __name__ == "__main__":
     app()

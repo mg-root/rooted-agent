@@ -45,7 +45,7 @@ def select_workspace():
 
             live.update(render_menu())
 
-def select_files(workspace: str, path: str = None, multiple: bool = False, authorized_hidden_files: bool = False, authorized_files_extension: list = [".txt"], current_files: list = []):
+def select_files(workspace: str, path: str = None, multiple: bool = False, authorized_hidden_files: bool = False, authorized_files_extension: list = [".txt", ".md", ".py", ".js", ".ts", ".cpp", ".c", ".cs", ".hpp", ".h", ".html", ".php", ".css", ".java", ".json", ".jsonc", ".docx", ".odt"], current_files: list = []):
     if not path:
         path = workspace
     
