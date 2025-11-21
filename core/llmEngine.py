@@ -5,7 +5,7 @@ from core.system import PATHS, load_json
 def _ollama_generate_without_tools(messages: list):
     config = load_json(PATHS["DEFAULT"])
 
-    url = "http://localhost:11434/api/chat"
+    url = f"{config["ollama_api"]}/chat"
     payload = {
         "model": config["model"],
         "messages": messages,
@@ -26,7 +26,7 @@ def _ollama_generate_include_tools(messages: list):
     config = load_json(PATHS["DEFAULT"])
     tools_api = load_json(PATHS["TOOLS_API"])
 
-    url = "http://localhost:11434/api/chat"
+    url = f"{config["ollama_api"]}/chat"
     payload = {
         "model": config["model"],
         "messages": messages,
@@ -50,7 +50,7 @@ def _ollama_generate_include_tools(messages: list):
 def _ollama_generate(messages: list):
     config = load_json(PATHS["DEFAULT"])
 
-    url = "http://localhost:11434/api/chat"
+    url = f"{config["ollama_api"]}/chat"
     payload = {
         "model": config["model"],
         "messages": messages,

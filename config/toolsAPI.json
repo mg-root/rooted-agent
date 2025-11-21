@@ -15,9 +15,9 @@
             "type": "string",
             "description": "Complete source code with changes applied."
           },
-          "modification_explained": {
+          "preview": {
             "type": "string",
-            "description": "A short explanation of the changes, SHOWING the modified lines."
+            "description": "[-] Old\n[+] New"
           }
         },
         "required": ["path", "content"]
@@ -28,20 +28,16 @@
   "type": "function",
   "function": {
     "name": "make_file",
-    "description": "Create a new file with the given content. Overwrites existing file.",
+    "description": "Create a new file without given content. Overwrites existing file.",
     "parameters": {
       "type": "object",
       "properties": {
         "path": {
           "type": "string",
           "description": "Full path of the file to create."
-        },
-        "content": {
-          "type": "string",
-          "description": "Initial content of the file."
         }
       },
-      "required": ["path", "content"]
+      "required": ["path"]
     }
   }
 }

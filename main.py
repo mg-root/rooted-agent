@@ -2,25 +2,25 @@ import typer
 import os
 from rich.console import Console
 from rich.live import Live
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Prompt
 from rich.markdown import Markdown
-from core.llm import ollama_generate
-from core.system import PATHS, load_json, save_chat
+from core.llmEngine import ollama_generate
+from core.system import PATHS, load_json
 from core.chatBuilder import build_chat
 from core.toolsManager import execute_tool
 from core.notifications import informate
 from tools.read_file import read_file
+from core.commandHandler import CommandHandler
 
 import requests
-from rich.console import Console
-
-from core.filesManager import select_workspace, select_files
 
 app = typer.Typer(help="Agent IA - Rooted ready to support you.")
 console = Console()
 config = load_json(PATHS["DEFAULT"])
+handler = CommandHandler(config, console)
 
-OLLAMA_API = "http://localhost:11434/api"
+################################################################################
+OLLAMA_API = config["ollama_api"]
 MODEL_NAME = config["model"]
 
 def is_model_loaded(model_name: str) -> bool:
@@ -34,6 +34,7 @@ def is_model_loaded(model_name: str) -> bool:
 
 def load_model_with_progress(model_name: str):
     console.print(f"[magenta]Chargement du modèle {model_name}...[/magenta]")
+################################################################################
 
 @app.command()
 def chat(include_tools: bool = False):
@@ -45,118 +46,16 @@ def chat(include_tools: bool = False):
     informate("Rooted is ready to help you !")
     
     history = []
-    tmp = []
-    context = {
-        "workspace": "",
-        "files": []
-    }
 
-    while True:
+    while handler.state["running"]:
         prompt = config['promptDisplayed']
 
-        if len(tmp) > 0:
-            prompt = f"[Files: [green]{" [/green]/[green] ".join([str(file[0]) for file in tmp])}[/green]]" + prompt
+        if len(handler.state["tmp"]) > 0:
+            prompt = f"[Files: [green]{" [/green]/[green] ".join([str(file[0]) for file in handler.state["tmp"]])}[/green]]" + prompt
 
         user_input = Prompt.ask(prompt)
 
-        # Exit
-        if user_input.lower() == f"{config["prefix"]}exit":
-            console.print("[red bold]End of the chat.[/red bold]")
-            break
-
-        # Load
-        elif user_input.lower() == f"{config["prefix"]}load":
-            workspace = select_workspace()
-            files = select_files(workspace, multiple=True)
-            for file in files:
-                with open(file, "r", encoding="utf-8") as f:
-                    content = f.read()
-                file_name = os.path.basename(file)
-                console.print(f"[[green]+[/green]] File loaded [green bold]{file_name}[/greenbold]\n")
-                tmp.append([file_name, content])
-            continue
-
-        # Context
-        elif user_input.lower() == f"{config["prefix"]}context" or user_input.lower() == f"{config["prefix"]}ctx":
-            workspace = select_workspace()
-
-            if not workspace:
-                continue
-
-            selectSpecificFiles = Confirm.ask("Do you want to select specific files ?", show_default=True, default=True)
-            if selectSpecificFiles:
-                last_current_files = context["files"].copy()
-                result = select_files(workspace, multiple=True, current_files=context["files"])
-                
-                if result == False:
-                    continue
-                elif result == [] and last_current_files != []:
-                    console.print(f"[[red bold]-[/red bold]] Context removed.\n")
-                    continue
-
-                context["files"] = result
-                context["workspace"] = ""
-
-                if last_current_files != [] and last_current_files != context["files"]:
-                    removed = []
-                    added = []
-                    for file in last_current_files:
-                        if file not in context["files"]:
-                            removed.append(file)
-
-                    if removed:
-                        console.print(f"[[red bold]-[/red bold]] File(s) removed from context:\n{"\n".join([f" • [red bold]{os.path.basename(file)}[/red bold]" for file in removed])}\n")
-
-                    for file in context["files"]:
-                        if file not in last_current_files:
-                            added.append(file)
-
-                    if added:
-                        console.print(f"[[green bold]+[/green bold]] File(s) added into context:\n{"\n".join([f" • [green bold]{os.path.basename(file)}[/green bold]" for file in added])}\n")
-                else:   
-                    console.print(f"[[green bold]+[/green bold]] File(s) added into context:\n{"\n".join([f" • [green bold]{os.path.basename(file)}[/green bold]" for file in context["files"]])}\n")
-            else:
-                context["workspace"] = workspace
-                console.print(f"[[green bold]+[/green bold]] Workspace added into context: [green bold]{workspace}[/green bold]\n")
-            continue
-
-        # Get Context
-        elif user_input.lower() == f"{config["prefix"]}context -get" or user_input.lower() == f"{config["prefix"]}ctx -get":
-            if context["workspace"]:
-                console.print(f"[[magenta bold]Workspace[/magenta bold]] [magenta bold]{context["workspace"]}[/magenta bold]\n")
-            elif context["files"]:
-                console.print(f"[[magenta bold]File{"s" if len(context['files']) > 1 else ""}[/magenta bold]]\n{"\n".join([f" • [magenta bold]{os.path.basename(file)}[/magenta bold]" for file in context["files"]])}\n")
-            else:
-                console.print(f"[[red bold]![/red bold]] [red]No defined context.[/red]\n")
-            continue
-
-        # Remove Context
-        elif user_input.lower() == f"{config["prefix"]}context -remove" or user_input.lower() == f"{config["prefix"]}ctx -remove":
-            console.print(context["workspace"])
-            console.print(context["files"])
-            if context["workspace"] == "" and context["files"] == []:
-                console.print(f"[[red bold]![/red bold]] [red]No defined context.[/red]\n")
-            else:
-                context = {
-                    "workspace": "",
-                    "files": []
-                }
-                console.print(f"[[red bold]-[/red bold]] Context removed.\n")
-            continue
-        
-        # History
-        elif user_input.lower() == f"{config["prefix"]}history":
-            console.print(history)
-            continue
-
-        # Save (decapreted)
-        elif user_input.lower().startswith(f'{config["prefix"]}save '):
-            name = user_input.replace(f"{config["prefix"]}save ", "").strip()
-            success = save_chat(name, history)
-            if success:
-                console.print(f"[[green]Chat saved[/green]] {os.path.join(PATHS["LOGS"], name)}\n")
-            else:
-                console.print(f"[[red]Error save[/red]]\n")
+        if handler.dispatch(user_input):
             continue
 
         if not user_input:
@@ -165,10 +64,10 @@ def chat(include_tools: bool = False):
         if not is_model_loaded(MODEL_NAME):
             load_model_with_progress(MODEL_NAME)
 
-        for file in tmp:
+        for file in handler.state["tmp"]:
             history.append({
                 "role": "system",
-                "content": f"[File: {file[0]}]\n---START---{file[1]}\n---END---"
+                "content": f"[File: {file[0]}]\n{file[1]}\n"
             })
 
         history.append({
@@ -176,7 +75,8 @@ def chat(include_tools: bool = False):
             "content": user_input
         })
 
-        if context["files"]:
+        # Workspace
+        if handler.state["workspace"]["files"]:
             tmp_messages = []
             tmp_messages.append({
                 "role": "system",
@@ -184,8 +84,8 @@ def chat(include_tools: bool = False):
                     "You are an assistant whose ONLY responsibility is to select which files are relevant "
                     "to the user's last message.\n\n"
 
-                    "Below is the list of files available in the context:\n"
-                    f"{chr(10).join([f' - {file}' for file in context['files']])}\n\n"
+                    "Below is the list of files available in the workspace:\n"
+                    f"{chr(10).join([f' - {file}' for file in handler.state["workspace"]["files"]])}\n\n"
 
                     "YOUR RULES (STRICT):\n"
                     "1. You MUST NOT answer the user's question.\n"
@@ -201,7 +101,7 @@ def chat(include_tools: bool = False):
                     "[\"/full/path/to/file.ext\", ...]\n\n"
 
                     "SELECTION RULES:\n"
-                    "- If the user explicitly mentions a file name, return ONLY that file (if it exists in the context).\n"
+                    "- If the user explicitly mentions a file name, return ONLY that file (if it exists in the workspace).\n"
                     "- If no file corresponds to the user's request, return an empty list: [].\n"
                     "- If you are unsure whether a file may be relevant, INCLUDE IT in the list.\n"
                     "- NEVER return anything other than a pure JSON array of file paths.\n"
@@ -209,16 +109,12 @@ def chat(include_tools: bool = False):
                 )
             })
 
-
-
             tmp_messages.append({
                 "role": "user",
                 "content": user_input
             })
             
             response = ollama_generate(tmp_messages, force_no_stream=True)
-
-            console.log(response, type(response))
 
             if isinstance(response, list) and len(response) > 0:
                 for file in response:
@@ -229,10 +125,10 @@ def chat(include_tools: bool = False):
 
                     history.insert(-2, {
                         "role": "system",
-                        "content": f"[File: {file}]\n---START---\n{content}\n---END---"
+                        "content": f"[File: {file}]\n{content}\n"
                     })
 
-
+        # Tools
         if include_tools:
             try:
                 response = ollama_generate(build_chat(history), include_tools)
@@ -254,18 +150,28 @@ def chat(include_tools: bool = False):
                         "content": final_response
                     })
 
-                    console.print(Markdown(final_response + "\n"))
+                    try:
+                        console.print(Markdown(final_response + "\n"))
+                    except Exception as e:
+                        console.print(final_response)
+                        console.print(f"\n[red]Error tools -> print final tools reponse:[/red] {e}")
                 else:
                     history.append({
                         "role": 'assistant',
                         "content": response
                     })
 
-                    tmp = []
+                    handler.state["tmp"] = []
 
-                    console.print(Markdown(response + "\n"))
+                    try:
+                        console.print(Markdown(response + "\n"))
+                    except Exception as e:
+                        console.print(response)
+                        console.print(f"\n[red]Error tools -> print response:[/red] {e}")
             except Exception as e:
-                console.print(f"\n[red]Error 1111:[/red] {e}")
+                console.print(f"\n[red]Error tools:[/red] {e}")
+
+        # Without tools
         else:
             try:
                 response = ""
@@ -280,9 +186,9 @@ def chat(include_tools: bool = False):
                     "content": response
                 })
 
-                tmp = []
+                handler.state["tmp"] = []
             except Exception as e:
-                console.print(f"\n[red]Error 111:[/red] {e}")
+                console.print(f"\n[red]Error without tools:[/red] {e}")
 
 if __name__ == "__main__":
     app()

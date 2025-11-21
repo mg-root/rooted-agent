@@ -5,3 +5,7 @@
 - gérer ficheir sans extension à la création
 - gérer mieux les confirmations pour avoir plus d'explications
 - ajotuer systeme de backup sur modification de fichier existant
+
+### Features
+
+- database search
