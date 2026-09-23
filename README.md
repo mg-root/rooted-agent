@@ -30,7 +30,7 @@
 - [Ce que ce projet m'a apporté](#-ce-que-ce-projet-ma-apporté)
 - [Licence](#-licence)
 
-<p align="center"><img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/></p>
+---
 
 ## 🎯 Contexte
 
@@ -42,7 +42,7 @@ Au-delà de la confidentialité, l'objectif était d'apprendre : comprendre, en 
 
 > ℹ️ **Preuve de concept.** J'ai mené ce projet jusqu'à comprendre l'essentiel du fonctionnement d'un agent IA, puis je l'ai mis en pause (voir [Portée du projet](#-portée-du-projet)). Il documente une étape de mon apprentissage sur les agents et l'IA locale.
 
-<p align="center"><img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/></p>
+---
 
 ## 💡 Objectif du projet
 
@@ -52,7 +52,7 @@ Au-delà de la confidentialité, l'objectif était d'apprendre : comprendre, en 
 - **Gérer un contexte riche** : message système, instructions développeur, mémoire persistante, spécialisations.
 - **Offrir une expérience terminal soignée** : sélection de fichiers, espaces de travail, rendu Markdown.
 
-<p align="center"><img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/></p>
+---
 
 ## ✨ Fonctionnalités
 
@@ -67,7 +67,7 @@ Au-delà de la confidentialité, l'objectif était d'apprendre : comprendre, en 
 | **Confirmations** | Les actions sensibles (écriture de fichier) demandent une validation |
 | **Whitelist** | Les opérations sont restreintes à des dossiers autorisés |
 
-<p align="center"><img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/></p>
+---
 
 ## 🏗️ Architecture
 
@@ -104,7 +104,7 @@ rooted-agent/
 
 **Le flux d'une requête :** l'utilisateur écrit → `chatBuilder` assemble le contexte → `llmEngine` interroge Ollama → si le modèle demande un outil, `toolsManager` l'exécute (après confirmation) → la réponse finale est rendue en Markdown.
 
-<p align="center"><img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/></p>
+---
 
 ## 📦 Installation
 
@@ -122,7 +122,7 @@ pip install -r requirements.txt
 ollama pull qwen2.5:7b-instruct
 ```
 
-<p align="center"><img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/></p>
+---
 
 ## 🚀 Utilisation
 
@@ -141,7 +141,7 @@ python main.py chat --include-tools   # active l'appel d'outils
 | `$workspace -remove` | Réinitialiser l'espace de travail |
 | `$exit` | Quitter |
 
-<p align="center"><img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/></p>
+---
 
 ## ⚙️ Configuration
 
@@ -161,7 +161,7 @@ Tout se règle dans `config/default.json` :
 - **`whitelist_workspaces`** — les seuls dossiers où l'agent peut lire/écrire.
 - **`prefix`** — le préfixe des commandes internes.
 
-<p align="center"><img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/></p>
+---
 
 ## 🚧 Portée du projet
 
@@ -183,7 +183,7 @@ Deux raisons à cette pause, assumées :
 - Recherche web réelle (aujourd'hui simulée)
 - Tests automatisés
 
-<p align="center"><img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/></p>
+---
 
 ## 🎓 Ce que ce projet m'a apporté
 
@@ -192,7 +192,7 @@ Deux raisons à cette pause, assumées :
 - **La conception d'une architecture modulaire** séparant cœur, outils et configuration.
 - **Les enjeux de sécurité d'un agent qui agit sur le système** : whitelist de dossiers, confirmations avant écriture, sauvegardes.
 
-<p align="center"><img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%"/></p>
+---
 
 ## 📄 Licence
 
